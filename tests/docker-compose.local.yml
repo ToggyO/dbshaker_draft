@@ -1,0 +1,24 @@
+version: '3.5'
+
+services:
+  dbshaker-postgres-local:
+    image: postgres:12.1
+    container_name: dbshaker-postgres-local
+    restart: on-failure
+    ports:
+      - '15436:5432'
+    environment:
+      - POSTGRES_USER=dbshaker_root
+      - POSTGRES_PASSWORD=p@ssw0rd
+      - POSTGRES_DB=dbshaker
+    volumes:
+      - dbshaker-postgres-local:/var/lib/postgresql/data
+    networks:
+      - dbshaker-test-network
+
+volumes:
+  dbshaker-postgres-local:
+
+networks:
+  dbshaker-test-network:
+    driver: bridge
