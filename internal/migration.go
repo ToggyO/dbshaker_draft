@@ -1,33 +1,49 @@
 package internal
 
 import (
+	"context"
 	"database/sql"
 	"fmt"
 	"log"
 	"path/filepath"
 )
 
+// MigrationFunc migration action in database.
 type MigrationFunc func(tx *sql.Tx) error
 
+// Migration represents a database migration, manages by go runtime.
 type Migration struct {
-	Name    string
-	Version int64
+	Name    string // migration file name.
+	Version int64  // version of migration.
 
-	UpFn   MigrationFunc
-	DownFn MigrationFunc
+	UpFn   MigrationFunc // Up migrations function.
+	DownFn MigrationFunc // Down migrations function.
 
-	IsApplied bool
+	Source    string // path to migration file.
+	IsApplied bool   // indicates, whether migration is applied to database schema.
 }
 
-func (m *Migration) Up(db *sql.DB) error {
-	return m.run(db, true)
+// Up executes an up migration.
+func (m *Migration) Up(db *sql.DB, dialect ISqlDialect) error {
+	return m.UpContext(context.Background(), db, dialect)
 }
 
-func (m *Migration) Down(db *sql.DB) error {
-	return m.run(db, false)
+// UpContext executes an up migration with context.
+func (m *Migration) UpContext(ctx context.Context, db *sql.DB, dialect ISqlDialect) error {
+	return m.run(ctx, db, dialect, true)
 }
 
-func (m *Migration) run(db *sql.DB, direction bool) error {
+// Down executes an up migration.
+func (m *Migration) Down(db *sql.DB, dialect ISqlDialect) error {
+	return m.DownContext(context.Background(), db, dialect)
+}
+
+// DownContext executes an up migration with context.
+func (m *Migration) DownContext(ctx context.Context, db *sql.DB, dialect ISqlDialect) error {
+	return m.run(ctx, db, dialect, true)
+}
+
+func (m *Migration) run(ctx context.Context, db *sql.DB, dialect ISqlDialect, direction bool) error {
 	ext := filepath.Ext(m.Name)
 	switch ext {
 	case SqlExt:
@@ -49,13 +65,18 @@ func (m *Migration) run(db *sql.DB, direction bool) error {
 
 		if fn != nil {
 			if err = fn(tx); err != nil {
-				tx.Rollback()
+				_ = tx.Rollback()
+				// TODO: duplicate
 				return fmt.Errorf("ERROR %v: failed to run Go migration function %T: %w", filepath.Base(m.Name), fn, err)
 			}
 
 		}
 
-		// TODO: insert version
+		if err = dialect.InsertVersion(ctx, m.Version); err != nil {
+			_ = tx.Rollback()
+			// TODO: duplicate
+			return fmt.Errorf("ERROR %v: failed to run Go migration function %T: %w", filepath.Base(m.Name), fn, err)
+		}
 
 		if err := tx.Commit(); err != nil {
 			return fmt.Errorf("ERROR failed to commit transaction: %w", err)

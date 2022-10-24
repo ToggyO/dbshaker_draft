@@ -2,16 +2,9 @@ package dbshaker
 
 import (
 	"fmt"
-	"runtime"
-
 	"github.com/ToggyO/dbshaker/internal"
+	"runtime"
 )
-
-var (
-	registeredGoMigrations = make(map[int64]*internal.Migration)
-)
-
-type Migrations []*internal.Migration
 
 func AddMigration(up internal.MigrationFunc, down internal.MigrationFunc) {
 	_, filename, _, _ := runtime.Caller(1)
@@ -28,18 +21,9 @@ func AddMigration(up internal.MigrationFunc, down internal.MigrationFunc) {
 		DownFn:  down,
 	}
 
-	if exists, ok := migrator.TryGetMigration(version); ok {
+	if exists, ok := migrator.registeredGoMigrations[version]; ok {
 		panic(fmt.Sprintf("failed to add migration %q: conflicts with exitsting %q", filename, exists.Name))
 	}
 
-	registeredGoMigrations[version] = migration
-}
-
-func LookupMigrations(directory string) ([]internal.Migration, error) {
-	var migrations Migrations
-
-	// Migrations in .go files, registered via AddMigration
-	for k, v := registeredGoMigrations {
-
-	}
+	migrator.registeredGoMigrations[version] = migration
 }

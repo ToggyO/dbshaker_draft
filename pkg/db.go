@@ -1,8 +1,10 @@
 package dbshaker
 
 import (
+	"context"
 	"database/sql"
 	"fmt"
+
 	"github.com/ToggyO/dbshaker/internal"
 )
 
@@ -32,4 +34,19 @@ func OpenDbWithDriver(dialect, connectionString string) (*sql.DB, error) {
 	fmt.Println("Connected to database!")
 
 	return db, nil
+}
+
+func EnsureDbVersion(db *sql.DB) (int64, error) {
+	return EnsureDbVersionContext(context.Background(), db)
+}
+
+func EnsureDbVersionContext(ctx context.Context, db *sql.DB) (int64, error) {
+	sqlDialect := migrator.getDialect()
+
+	version, err := sqlDialect.GetDbVersion(ctx)
+	if err != nil {
+		return 0, sqlDialect.CreateVersionTable(ctx)
+	}
+
+	return version, nil
 }
