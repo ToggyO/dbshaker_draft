@@ -30,9 +30,14 @@ func (p *postgresDialect) CreateVersionTable(ctx context.Context) error {
 	return err
 }
 
-// TODO: Продумать патч версии
 func (p *postgresDialect) InsertVersion(ctx context.Context, version int64) error {
 	query := fmt.Sprintf(`INSERT INTO %s (version,patch,applied_at) VALUES ($1,);`, p.tableName)
+	_, err := p.GetQueryRunner(ctx).ExecContext(ctx, query, version)
+	return err
+}
+
+func (p *postgresDialect) PatchVersion(ctx context.Context, version int64) error {
+	query := fmt.Sprintf(`UPDATE %s SET patch = patch + 1 WHERE version = $1`, p.tableName)
 	_, err := p.GetQueryRunner(ctx).ExecContext(ctx, query, version)
 	return err
 }
