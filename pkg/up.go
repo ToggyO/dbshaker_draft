@@ -40,7 +40,7 @@ func UpContext(ctx context.Context, db *sql.DB, directory string) error {
 	notAppliedMigrationsLen := len(notAppliedMigrations)
 	if notAppliedMigrationsLen > 0 {
 		if notAppliedMigrations[notAppliedMigrationsLen-1].Version < currentDbVersion {
-			err = dialect.PatchVersion(ctx, currentDbVersion)
+			err = dialect.IncrementVersionPatch(ctx, currentDbVersion)
 		}
 	}
 

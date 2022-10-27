@@ -36,7 +36,7 @@ func (p *postgresDialect) InsertVersion(ctx context.Context, version int64) erro
 	return err
 }
 
-func (p *postgresDialect) PatchVersion(ctx context.Context, version int64) error {
+func (p *postgresDialect) IncrementVersionPatch(ctx context.Context, version int64) error {
 	query := fmt.Sprintf(`UPDATE %s SET patch = patch + 1 WHERE version = $1`, p.tableName)
 	_, err := p.GetQueryRunner(ctx).ExecContext(ctx, query, version)
 	return err
