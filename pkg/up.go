@@ -30,9 +30,17 @@ func UpContext(ctx context.Context, db *sql.DB, directory string) error {
 	}
 
 	notAppliedMigrations := lookupNotAppliedMigrations(dbMigrations.ToMigrationsList(), foundMigrations)
+
 	for _, migration := range notAppliedMigrations {
 		if err = migration.UpContext(ctx, db, dialect); err != nil {
 			return err
+		}
+	}
+
+	notAppliedMigrationsLen := len(notAppliedMigrations)
+	if notAppliedMigrationsLen > 0 {
+		if notAppliedMigrations[notAppliedMigrationsLen-1].Version < currentDbVersion {
+			err = dialect.PatchVersion(ctx, currentDbVersion)
 		}
 	}
 
