@@ -12,6 +12,7 @@ import (
 type MigrationFunc func(tx *sql.Tx) error
 
 // Migration represents a database migration, manages by go runtime.
+// TODO: check on field privacy
 type Migration struct {
 	Name    string // migration file name.
 	Version int64  // version of migration.
@@ -20,7 +21,7 @@ type Migration struct {
 	DownFn MigrationFunc // Down migrations function.
 
 	Source    string // path to migration file.
-	IsApplied bool   // indicates, whether migration is applied to database schema.
+	IsApplied bool   // indicates, whether migration is applied to database schema. // TODO: не нужон, походу
 }
 
 // Up executes an up migration.

@@ -6,6 +6,9 @@ import (
 	"sort"
 )
 
+const MaxUint = ^uint64(0)
+const maxVersion = int64(MaxUint >> 1) // max(int64)
+
 // Migrations runtime slice of Migration struct pointers.
 type Migrations []*internal.Migration
 
@@ -26,8 +29,8 @@ func (ms Migrations) Less(i, j int) bool {
 
 // LookupMigrations returns a slice of valid migrations in the migrations folder and migration registry,
 // sorted by version in ascending direction.
-// TODO: `embed` support in future
-func lookupMigrations(directory string) (Migrations, error) {
+// TODO: `embed` support in future by embed.FS
+func lookupMigrations(directory string, targetVersion int64) (Migrations, error) {
 	var migrations Migrations
 
 	// SQL migrations
@@ -48,6 +51,10 @@ func lookupMigrations(directory string) (Migrations, error) {
 			return nil, internal.ErrCouldNotParseMigration(file, err)
 		}
 
+		if v > targetVersion {
+			continue
+		}
+
 		migrations = append(migrations, &internal.Migration{
 			Name:    filepath.Base(file),
 			Version: v,
@@ -62,6 +69,9 @@ func lookupMigrations(directory string) (Migrations, error) {
 
 	// Migrations in `.go` files, registered via AddMigration
 	for _, migration := range migrator.registeredGoMigrations {
+		if migration.Version > targetVersion {
+			continue
+		}
 		migrations = append(migrations, migration)
 	}
 

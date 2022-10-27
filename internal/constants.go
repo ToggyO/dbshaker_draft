@@ -1,6 +1,7 @@
 package internal
 
 const (
+	ToolName          = "dbshaker"
 	ServiceTableName  = "dbshaker_version"
 	GoExt             = ".go"
 	SqlExt            = ".sql"

@@ -1,6 +1,7 @@
 package internal
 
 import (
+	"log"
 	"path/filepath"
 	"strconv"
 	"strings"
@@ -24,4 +25,8 @@ func IsValidFileName(value string) (int64, error) {
 	}
 
 	return num, nil
+}
+
+func LogWithPrefix(message string) {
+	log.Printf("%s: %s", ToolName, message)
 }

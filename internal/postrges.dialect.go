@@ -21,7 +21,7 @@ func NewPostgresDialect(db *sql.DB, tableName string) ISqlDialect {
 
 func (p *postgresDialect) CreateVersionTable(ctx context.Context) error {
 	query := fmt.Sprintf(`CREATE TABLE %s (
-			version BIGINT NOT NULL,
+			version BIGINT NOT NULL UNIQUE,
 			patch INTEGER DEFAULT 0,
 			applied_at DATE DEFAULT NOW()
 	);`, p.tableName)
@@ -31,7 +31,7 @@ func (p *postgresDialect) CreateVersionTable(ctx context.Context) error {
 }
 
 func (p *postgresDialect) InsertVersion(ctx context.Context, version int64) error {
-	query := fmt.Sprintf(`INSERT INTO %s (version,patch,applied_at) VALUES ($1,);`, p.tableName)
+	query := fmt.Sprintf(`INSERT INTO %s (version) VALUES ($1);`, p.tableName)
 	_, err := p.GetQueryRunner(ctx).ExecContext(ctx, query, version)
 	return err
 }
