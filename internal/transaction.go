@@ -32,7 +32,7 @@ func (tm *TransactionManager) Transaction(ctx context.Context, action Transactio
 
 	ctx = context.WithValue(ctx, transactionKey, tx)
 
-	err = action(ctx)
+	err = action(ctx, tx)
 	return err
 }
 

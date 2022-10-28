@@ -25,43 +25,55 @@ func DownTo(db *sql.DB, directory string, targetVersion int64) error {
 
 // DownToContext rolls back migrations to a specific version with context.
 func DownToContext(ctx context.Context, db *sql.DB, directory string, targetVersion int64) error {
-	migrator.setDb(db)
 	dialect := migrator.getDialect()
-
-	migrations, err := lookupMigrations(directory)
+	currentDbVersion, err := EnsureDbVersionContext(ctx, db)
 	if err != nil {
 		return err
 	}
 
-	migrationsMap := make(map[int64]*internal.Migration)
-	for _, m := range migrations {
-		migrationsMap[m.Version] = m
+	if currentDbVersion < targetVersion {
+		return internal.ErrDbAlreadyIsUpToDate(currentDbVersion)
 	}
 
-	for {
-		currentDbVersion, err := EnsureDbVersionContext(ctx, db)
+	return dialect.Transaction(ctx, func(ctx context.Context, tx *sql.Tx) error {
+		migrations, err := lookupMigrations(directory, maxVersion)
 		if err != nil {
 			return err
 		}
 
-		if currentDbVersion == 0 {
-			internal.LogWithPrefix(fmt.Sprintf("no migrations to run. current version: %d\n", currentDbVersion))
-			return nil
+		migrationsMap := make(map[int64]*internal.Migration)
+		for _, m := range migrations {
+			migrationsMap[m.Version] = m
 		}
 
-		currentMigration, ok := migrationsMap[currentDbVersion]
-		if !ok {
-			internal.LogWithPrefix(fmt.Sprintf("goose: no migrations to run. current version: %d\n", currentDbVersion))
-			return nil
-		}
+		for {
+			currentDbVersion, err = EnsureDbVersionContext(ctx, db)
+			if err != nil {
+				return err
+			}
 
-		if currentMigration.Version < targetVersion {
-			internal.LogWithPrefix(fmt.Sprintf("goose: no migrations to run. current version: %d\n", currentDbVersion))
-			return nil
-		}
+			if currentDbVersion == 0 {
+				// TODO: duplicate
+				internal.LogWithPrefix(fmt.Sprintf("no migrations to run. current version: %d\n", currentDbVersion))
+				return nil
+			}
 
-		if err = currentMigration.DownContext(ctx, db, dialect); err != nil {
-			return err
+			currentMigration, ok := migrationsMap[currentDbVersion]
+			if !ok {
+				// TODO: duplicate
+				internal.LogWithPrefix(fmt.Sprintf("no migrations to run. current version: %d\n", currentDbVersion))
+				return nil
+			}
+
+			if currentMigration.Version < targetVersion {
+				// TODO: duplicate
+				internal.LogWithPrefix(fmt.Sprintf("no migrations to run. current version: %d\n", currentDbVersion))
+				return nil
+			}
+
+			if err = currentMigration.DownContext(ctx, tx, dialect); err != nil {
+				return err
+			}
 		}
-	}
+	})
 }

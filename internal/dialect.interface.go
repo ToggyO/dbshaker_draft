@@ -5,6 +5,8 @@ import (
 )
 
 type ISqlDialect interface {
+	ITransactionBuilder
+
 	CreateVersionTable(ctx context.Context) error
 	InsertVersion(ctx context.Context, version int64) error
 	IncrementVersionPatch(ctx context.Context, version int64) error

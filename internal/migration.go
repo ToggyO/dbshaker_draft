@@ -25,26 +25,26 @@ type Migration struct {
 }
 
 // Up executes an up migration.
-func (m *Migration) Up(db *sql.DB, dialect ISqlDialect) error {
-	return m.UpContext(context.Background(), db, dialect)
+func (m *Migration) Up(tx *sql.Tx, dialect ISqlDialect) error {
+	return m.UpContext(context.Background(), tx, dialect)
 }
 
 // UpContext executes an up migration with context.
-func (m *Migration) UpContext(ctx context.Context, db *sql.DB, dialect ISqlDialect) error {
-	return m.run(ctx, db, dialect, true)
+func (m *Migration) UpContext(ctx context.Context, tx *sql.Tx, dialect ISqlDialect) error {
+	return m.run(ctx, tx, dialect, true)
 }
 
 // Down executes an up migration.
-func (m *Migration) Down(db *sql.DB, dialect ISqlDialect) error {
-	return m.DownContext(context.Background(), db, dialect)
+func (m *Migration) Down(tx *sql.Tx, dialect ISqlDialect) error {
+	return m.DownContext(context.Background(), tx, dialect)
 }
 
 // DownContext executes an up migration with context.
-func (m *Migration) DownContext(ctx context.Context, db *sql.DB, dialect ISqlDialect) error {
-	return m.run(ctx, db, dialect, true)
+func (m *Migration) DownContext(ctx context.Context, tx *sql.Tx, dialect ISqlDialect) error {
+	return m.run(ctx, tx, dialect, true)
 }
 
-func (m *Migration) run(ctx context.Context, db *sql.DB, dialect ISqlDialect, direction bool) error {
+func (m *Migration) run(ctx context.Context, tx *sql.Tx, dialect ISqlDialect, direction bool) error {
 	ext := filepath.Ext(m.Name)
 	switch ext {
 	case SqlExt:
@@ -54,10 +54,12 @@ func (m *Migration) run(ctx context.Context, db *sql.DB, dialect ISqlDialect, di
 			return nil
 		}
 
-		tx, err := db.Begin()
-		if err != nil {
-			return err
-		}
+		var err error
+		// TODO: check
+		//tx, err := db.Begin()
+		//if err != nil {
+		//	return err
+		//}
 
 		fn := m.UpFn
 		if !direction {
@@ -74,14 +76,14 @@ func (m *Migration) run(ctx context.Context, db *sql.DB, dialect ISqlDialect, di
 		}
 
 		if err = dialect.InsertVersion(ctx, m.Version); err != nil {
-			_ = tx.Rollback()
+			//_ = tx.Rollback()
 			// TODO: duplicate
 			return fmt.Errorf("ERROR %v: failed to run Go migration function %T: %w", filepath.Base(m.Name), fn, err)
 		}
-
-		if err := tx.Commit(); err != nil {
-			return fmt.Errorf("ERROR failed to commit transaction: %w", err)
-		}
+		// TODO: check
+		//if err := tx.Commit(); err != nil {
+		//	return fmt.Errorf("ERROR failed to commit transaction: %w", err)
+		//}
 
 		if fn != nil {
 			log.Println("OK   ", filepath.Base(m.Name))
