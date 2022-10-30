@@ -23,7 +23,7 @@ func (p *postgresDialect) CreateVersionTable(ctx context.Context) error {
 	query := fmt.Sprintf(`CREATE TABLE %s (
 			version BIGINT NOT NULL UNIQUE,
 			patch INTEGER DEFAULT 0,
-			applied_at DATE DEFAULT NOW()
+			applied_at DATETIME DEFAULT NOW()
 	);`, p.tableName)
 
 	_, err := p.GetQueryRunner(ctx).ExecContext(ctx, query)
@@ -52,26 +52,29 @@ func (p *postgresDialect) GetMigrationsList(ctx context.Context, filter *Migrati
 	sb := strings.Builder{}
 	sb.WriteString(fmt.Sprintf(`SELECT version, patch, applied_at FROM %s OFFSET $1`, p.tableName))
 
-	var offset int
-	var limit int
-	if filter != nil {
-		offset = filter.Offset
-		limit = filter.Limit
+	var params []any
+	if filter == nil {
+		filter = &MigrationListFilter{}
 	}
 
-	if limit == 0 {
-		sb.WriteString("LIMIT ALL")
-	} else {
+	if filter.Offset >= 0 {
+		params = append(params, filter.Offset)
+	}
+
+	if filter.Limit > 0 {
 		sb.WriteString("LIMIT $2")
+		params = append(params, filter.Limit)
 	}
 
 	sb.WriteString(";")
-
-	rows, err := p.GetQueryRunner(ctx).QueryContext(ctx, sb.String(), offset, limit)
+	k := sb.String()
+	rows, err := p.GetQueryRunner(ctx).QueryContext(ctx, k, params...)
 	if err != nil {
 		return nil, fmt.Errorf("failed to query migrations: %w", err)
 	}
-	var migrations MigrationRecords
+
+	defer rows.Close()
+	migrations := make(MigrationRecords, 0, 0)
 
 	for rows.Next() {
 		var model MigrationRecord
@@ -95,8 +98,15 @@ func (p *postgresDialect) GetDbVersion(ctx context.Context) (int64, error) {
 	queryRunner := p.GetQueryRunner(ctx)
 
 	var version int64
-	if err := queryRunner.QueryRowContext(ctx, query).Scan(&version); err != nil {
-		return 0, err
+	err := queryRunner.QueryRowContext(ctx, query).Scan(&version)
+
+	if err != nil {
+		switch err {
+		case sql.ErrNoRows:
+			return 0, nil
+		default:
+			return 0, err
+		}
 	}
 
 	return version, nil

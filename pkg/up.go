@@ -61,6 +61,11 @@ func UpToContext(ctx context.Context, db *sql.DB, directory string, targetVersio
 			}
 		}
 
+		currentDbVersion, err = EnsureDbVersionContext(ctx, db)
+		if err != nil {
+			return err
+		}
+
 		internal.LogWithPrefix(fmt.Sprintf("no migrations to run. current version: %d\n", currentDbVersion))
 		return nil
 	})

@@ -41,7 +41,7 @@ func (m *Migration) Down(tx *sql.Tx, dialect ISqlDialect) error {
 
 // DownContext executes an up migration with context.
 func (m *Migration) DownContext(ctx context.Context, tx *sql.Tx, dialect ISqlDialect) error {
-	return m.run(ctx, tx, dialect, true)
+	return m.run(ctx, tx, dialect, false)
 }
 
 func (m *Migration) run(ctx context.Context, tx *sql.Tx, dialect ISqlDialect, direction bool) error {
@@ -75,15 +75,19 @@ func (m *Migration) run(ctx context.Context, tx *sql.Tx, dialect ISqlDialect, di
 
 		}
 
-		if err = dialect.InsertVersion(ctx, m.Version); err != nil {
-			//_ = tx.Rollback()
-			// TODO: duplicate
-			return fmt.Errorf("ERROR %v: failed to run Go migration function %T: %w", filepath.Base(m.Name), fn, err)
+		if direction {
+			if err = dialect.InsertVersion(ctx, m.Version); err != nil {
+				//_ = tx.Rollback()
+				// TODO: duplicate
+				return fmt.Errorf("ERROR %v: failed to run Go migration function %T: %w", filepath.Base(m.Name), fn, err)
+			}
+		} else {
+			if err = dialect.RemoveVersion(ctx, m.Version); err != nil {
+				//_ = tx.Rollback()
+				// TODO: duplicate
+				return fmt.Errorf("ERROR %v: failed to run Go migration function %T: %w", filepath.Base(m.Name), fn, err)
+			}
 		}
-		// TODO: check
-		//if err := tx.Commit(); err != nil {
-		//	return fmt.Errorf("ERROR failed to commit transaction: %w", err)
-		//}
 
 		if fn != nil {
 			log.Println("OK   ", filepath.Base(m.Name))

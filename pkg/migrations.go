@@ -35,7 +35,7 @@ func lookupMigrations(directory string, targetVersion int64) (Migrations, error)
 
 	// SQL migrations
 	//sqlMigrationFiles, err := fs.Glob() for embedding `.sql` migrations
-	sqlMigrationFiles, err := filepath.Glob(directory + internal.SqlFilesPattern)
+	sqlMigrationFiles, err := filepath.Glob(filepath.Join(directory, internal.SqlFilesPattern))
 	if err != nil {
 		return nil, err
 	}
@@ -76,14 +76,29 @@ func lookupMigrations(directory string, targetVersion int64) (Migrations, error)
 	}
 
 	// Unregistered `.go` migrations
-	unregisteredGoMigrations, err := filepath.Glob(directory + internal.GoFilesPattern)
+	gGoMigrationsFiles, err := filepath.Glob(filepath.Join(directory, internal.GoFilesPattern))
 	if err != nil {
 		return nil, err
 	}
 
-	if len(unregisteredGoMigrations) > 0 {
-		return nil, internal.ErrUnregisteredGoMigration
+	for _, file := range gGoMigrationsFiles {
+		v, err := internal.IsValidFileName(file)
+		if err != nil {
+			continue // Пропускаем файлы, которые не имею версионного префикса
+		}
+
+		if _, ok := migrator.registeredGoMigrations[v]; !ok {
+			return nil, internal.ErrUnregisteredGoMigration
+		}
 	}
+	//unregisteredGoMigrations, err := filepath.Glob(filepath.Join(directory, internal.GoFilesPattern))
+	//if err != nil {
+	//	return nil, err
+	//}
+
+	//if len(unregisteredGoMigrations) > 0 {
+	//	return nil, internal.ErrUnregisteredGoMigration
+	//}
 
 	// TODO: check sort stability
 	sort.Sort(migrations)

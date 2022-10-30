@@ -23,6 +23,10 @@ func OpenDbWithDriver(dialect, connectionString string) (*sql.DB, error) {
 		return nil, fmt.Errorf("unsupported core.go '%s'", dialect)
 	}
 
+	if err != nil {
+		return nil, err
+	}
+
 	if err = db.Ping(); err != nil {
 		return nil, fmt.Errorf("unsupported core.go '%s'", dialect)
 	}
@@ -40,6 +44,7 @@ func EnsureDbVersion(db *sql.DB) (int64, error) {
 	return EnsureDbVersionContext(context.Background(), db)
 }
 
+// TODO: comment and check db param
 func EnsureDbVersionContext(ctx context.Context, db *sql.DB) (int64, error) {
 	sqlDialect := migrator.getDialect()
 
