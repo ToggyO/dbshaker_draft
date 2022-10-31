@@ -12,16 +12,9 @@ func init() {
 
 func Up11092022001(tx *sql.Tx) error {
 	_, err := tx.Exec(
-		`CREATE TABLE events(
+		`CREATE TABLE users(
 		id SERIAL PRIMARY KEY,
-		title VARCHAR NOT NULL,
-		start_date TIMESTAMP NOT NULL,
-		end_date TIMESTAMP,
-		description TEXT,
-		owner_id INTEGER NOT NULL,
-		notification_date TIMESTAMP NOT NULL,
-		created_at  TIMESTAMP NOT NULL DEFAULT NOW(),
-		updated_at TIMESTAMP
+		name VARCHAR NOT NULL
    	);`)
 	if err != nil {
 		return err
@@ -30,7 +23,7 @@ func Up11092022001(tx *sql.Tx) error {
 }
 
 func Down11092022001(tx *sql.Tx) error {
-	_, err := tx.Exec("DROP TABLE events;")
+	_, err := tx.Exec("DROP TABLE users;")
 	if err != nil {
 		return err
 	}

@@ -16,12 +16,12 @@ type MigrationFunc func(tx *sql.Tx) error
 type Migration struct {
 	Name    string // migration file name.
 	Version int64  // version of migration.
+	Patch   int16  // patch version of migration (increments when new migrations were applied, but the greatest migration version in not changed)
 
 	UpFn   MigrationFunc // Up migrations function.
 	DownFn MigrationFunc // Down migrations function.
 
-	Source    string // path to migration file.
-	IsApplied bool   // indicates, whether migration is applied to database schema. // TODO: не нужон, походу
+	Source string // path to migration file.
 }
 
 // Up executes an up migration.
@@ -49,17 +49,7 @@ func (m *Migration) run(ctx context.Context, tx *sql.Tx, dialect ISqlDialect, di
 	switch ext {
 	case SqlExt:
 	case GoExt:
-		// TODO: check
-		if m.IsApplied {
-			return nil
-		}
-
 		var err error
-		// TODO: check
-		//tx, err := db.Begin()
-		//if err != nil {
-		//	return err
-		//}
 
 		fn := m.UpFn
 		if !direction {

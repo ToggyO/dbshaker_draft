@@ -1,6 +1,7 @@
 package dbshaker
 
 import (
+	"context"
 	"github.com/ToggyO/dbshaker/internal"
 	"path/filepath"
 	"sort"
@@ -25,6 +26,20 @@ func (ms Migrations) Less(i, j int) bool {
 		panic(internal.ErrDuplicateVersion(ms[i].Version, ms[i].Source, ms[j].Source))
 	}
 	return ms[i].Version < ms[j].Version
+}
+
+// ListMigrations lists all applied migrations in database.
+func ListMigrations() (Migrations, error) {
+	return ListMigrationsContext(context.Background())
+}
+
+// ListMigrationsContext lists all applied migrations in database with context.
+func ListMigrationsContext(ctx context.Context) (Migrations, error) {
+	records, err := migrator.getDialect().GetMigrationsList(ctx, nil)
+	if err != nil {
+		return nil, err
+	}
+	return records.ToMigrationsList(), nil
 }
 
 // LookupMigrations returns a slice of valid migrations in the migrations folder and migration registry,
@@ -91,14 +106,6 @@ func lookupMigrations(directory string, targetVersion int64) (Migrations, error)
 			return nil, internal.ErrUnregisteredGoMigration
 		}
 	}
-	//unregisteredGoMigrations, err := filepath.Glob(filepath.Join(directory, internal.GoFilesPattern))
-	//if err != nil {
-	//	return nil, err
-	//}
-
-	//if len(unregisteredGoMigrations) > 0 {
-	//	return nil, internal.ErrUnregisteredGoMigration
-	//}
 
 	// TODO: check sort stability
 	sort.Sort(migrations)

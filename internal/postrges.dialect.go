@@ -23,7 +23,7 @@ func (p *postgresDialect) CreateVersionTable(ctx context.Context) error {
 	query := fmt.Sprintf(`CREATE TABLE %s (
 			version BIGINT NOT NULL UNIQUE,
 			patch INTEGER DEFAULT 0,
-			applied_at DATETIME DEFAULT NOW()
+			applied_at TIMESTAMP DEFAULT NOW()
 	);`, p.tableName)
 
 	_, err := p.GetQueryRunner(ctx).ExecContext(ctx, query)
@@ -79,7 +79,7 @@ func (p *postgresDialect) GetMigrationsList(ctx context.Context, filter *Migrati
 	for rows.Next() {
 		var model MigrationRecord
 
-		if err := rows.Scan(&model.Version, &model.AppliedAt); err != nil {
+		if err := rows.Scan(&model.Version, &model.Patch, &model.AppliedAt); err != nil {
 			return nil, fmt.Errorf("failed to scan row: %w", err)
 		}
 
@@ -97,6 +97,7 @@ func (p *postgresDialect) GetDbVersion(ctx context.Context) (int64, error) {
 	query := fmt.Sprintf(`SELECT version FROM %s ORDER BY version DESC;`, p.tableName)
 	queryRunner := p.GetQueryRunner(ctx)
 
+	// TODO: обдумать получение патча
 	var version int64
 	err := queryRunner.QueryRowContext(ctx, query).Scan(&version)
 

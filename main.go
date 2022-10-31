@@ -12,6 +12,8 @@ import (
 
 const connectionString = "host=localhost port=15436 user=dbshaker_root password=p@ssw0rd dbname=dbshaker sslmode=disable"
 
+// TODO: обдумать патч версии. Возмонжно, последней версией БД стоит считать последнюю примененную миграцию
+
 // TODO: remove package `github.com/lib/pq`
 func main() {
 	db, err := dbshaker.OpenDbWithDriver("postgres", connectionString)

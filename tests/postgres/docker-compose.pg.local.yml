@@ -6,11 +6,11 @@ services:
     container_name: dbshaker-postgres-local
     restart: on-failure
     ports:
-      - '15436:5432'
+      - ${DB_PORT}:5432
     environment:
-      - POSTGRES_USER=dbshaker_root
-      - POSTGRES_PASSWORD=p@ssw0rd
-      - POSTGRES_DB=dbshaker
+      POSTGRES_USER: ${DB_USER}
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
+      POSTGRES_DB: ${DB_NAME}
     volumes:
       - dbshaker-postgres-local:/var/lib/postgresql/data
     networks:
@@ -22,3 +22,5 @@ volumes:
 networks:
   dbshaker-test-network:
     driver: bridge
+
+# docker-compose -f docker-compose.pg.local.yml --project-directory ../ up -d --build
