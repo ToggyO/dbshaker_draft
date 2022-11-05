@@ -14,13 +14,11 @@ services:
     volumes:
       - dbshaker-postgres-local:/var/lib/postgresql/data
     networks:
-      - dbshaker-test-network
+      - dbshaker_test_network
+      - dbshaker_external_network
 
 volumes:
   dbshaker-postgres-local:
 
-networks:
-  dbshaker-test-network:
-    driver: bridge
 
 # docker-compose -f docker-compose.pg.local.yml --project-directory ../ up -d --build

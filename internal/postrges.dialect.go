@@ -93,20 +93,20 @@ func (p *postgresDialect) GetMigrationsList(ctx context.Context, filter *Migrati
 	return migrations, nil
 }
 
-func (p *postgresDialect) GetDbVersion(ctx context.Context) (int64, error) {
-	query := fmt.Sprintf(`SELECT version FROM %s ORDER BY version DESC;`, p.tableName)
+func (p *postgresDialect) GetDbVersion(ctx context.Context) (DbVersion, error) {
+	query := fmt.Sprintf(`SELECT version, patch FROM %s ORDER BY version DESC;`, p.tableName)
 	queryRunner := p.GetQueryRunner(ctx)
 
 	// TODO: обдумать получение патча
-	var version int64
-	err := queryRunner.QueryRowContext(ctx, query).Scan(&version)
+	var version DbVersion
+	err := queryRunner.QueryRowContext(ctx, query).Scan(&version.Version, &version.Patch)
 
 	if err != nil {
 		switch err {
 		case sql.ErrNoRows:
-			return 0, nil
+			return version, nil
 		default:
-			return 0, err
+			return version, err
 		}
 	}
 

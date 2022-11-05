@@ -10,12 +10,18 @@ var migrator = &migrationRunner{
 	registeredGoMigrations: make(map[int64]*internal.Migration),
 }
 
-// MigrationRunner - deprecated
-// TODO: check naming
 type migrationRunner struct {
 	db                     *sql.DB
 	dialect                internal.ISqlDialect
 	registeredGoMigrations map[int64]*internal.Migration
+}
+
+func newMigrationRunner(db *DB) *migrationRunner {
+	return &migrationRunner{
+		db:                     db.db,
+		dialect:                db.dialect,
+		registeredGoMigrations: make(map[int64]*internal.Migration),
+	}
 }
 
 func (mr *migrationRunner) setDb(db *sql.DB) {

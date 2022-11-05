@@ -8,6 +8,11 @@ import (
 	"github.com/ToggyO/dbshaker/internal"
 )
 
+type DB struct {
+	db      *sql.DB
+	dialect internal.ISqlDialect
+}
+
 func OpenDbWithDriver(dialect, connectionString string) (*sql.DB, error) {
 	fmt.Printf("Connecting to `%s` database...", dialect)
 
@@ -20,7 +25,7 @@ func OpenDbWithDriver(dialect, connectionString string) (*sql.DB, error) {
 	case internal.PostgresDialect, internal.PgxDialect:
 		db, err = sql.Open(dialect, connectionString)
 	default:
-		return nil, fmt.Errorf("unsupported core.go '%s'", dialect)
+		return nil, fmt.Errorf("unsupported driver '%s'", dialect)
 	}
 
 	if err != nil {
@@ -28,7 +33,7 @@ func OpenDbWithDriver(dialect, connectionString string) (*sql.DB, error) {
 	}
 
 	if err = db.Ping(); err != nil {
-		return nil, fmt.Errorf("unsupported core.go '%s'", dialect)
+		return nil, fmt.Errorf("ERROR: failed connect to database: %v", err)
 	}
 
 	if err = SetDialect(db, dialect); err != nil {
@@ -40,18 +45,21 @@ func OpenDbWithDriver(dialect, connectionString string) (*sql.DB, error) {
 	return db, nil
 }
 
-func EnsureDbVersion(db *sql.DB) (int64, error) {
+// EnsureDbVersion retrieves the current version for this DB (major version, patch).
+// Create and initialize the DB version table if it doesn't exist.
+func EnsureDbVersion(db *sql.DB) (int64, byte, error) {
 	return EnsureDbVersionContext(context.Background(), db)
 }
 
-// TODO: comment and check db param
-func EnsureDbVersionContext(ctx context.Context, db *sql.DB) (int64, error) {
+// EnsureDbVersionContext retrieves the current version for this DB (major version, patch) with context.
+// Create and initialize the DB version table if it doesn't exist.
+func EnsureDbVersionContext(ctx context.Context, db *sql.DB) (int64, byte, error) {
 	sqlDialect := migrator.getDialect()
 
 	version, err := sqlDialect.GetDbVersion(ctx)
 	if err != nil {
-		return 0, sqlDialect.CreateVersionTable(ctx)
+		return version.Version, version.Patch, sqlDialect.CreateVersionTable(ctx)
 	}
 
-	return version, nil
+	return version.Version, version.Patch, nil
 }

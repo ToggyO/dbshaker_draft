@@ -3,8 +3,6 @@ package dbshaker
 import (
 	"context"
 	"database/sql"
-	"fmt"
-
 	"github.com/ToggyO/dbshaker/internal"
 )
 
@@ -53,21 +51,18 @@ func DownToContext(ctx context.Context, db *sql.DB, directory string, targetVers
 			}
 
 			if currentDbVersion == 0 {
-				// TODO: duplicate
-				internal.LogWithPrefix(fmt.Sprintf("no migrations to run. current version: %d\n", currentDbVersion))
+				logger.Println(internal.GetSuccessMigrationMessage(currentDbVersion))
 				return nil
 			}
 
 			currentMigration, ok := migrationsMap[currentDbVersion]
 			if !ok {
-				// TODO: duplicate
-				internal.LogWithPrefix(fmt.Sprintf("no migrations to run. current version: %d\n", currentDbVersion))
+				logger.Println(internal.GetSuccessMigrationMessage(currentDbVersion))
 				return nil
 			}
 
-			if currentMigration.Version < targetVersion {
-				// TODO: duplicate
-				internal.LogWithPrefix(fmt.Sprintf("no migrations to run. current version: %d\n", currentDbVersion))
+			if currentMigration.Version <= targetVersion {
+				logger.Println(internal.GetSuccessMigrationMessage(currentDbVersion))
 				return nil
 			}
 

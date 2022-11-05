@@ -11,7 +11,7 @@ type MigrationListFilter struct {
 
 type MigrationRecord struct {
 	Version   int64     `db:"version"`
-	Patch     int32     `db:"patch"`
+	Patch     byte      `db:"patch"`
 	AppliedAt time.Time `db:"applied_at"`
 }
 
@@ -27,4 +27,9 @@ func (mr MigrationRecords) ToMigrationsList() []*Migration {
 	}
 
 	return migrations
+}
+
+type DbVersion struct {
+	Version int64
+	Patch   byte
 }

@@ -15,13 +15,19 @@ type DbConf struct {
 	Name     string
 }
 
-func NewDbConf() DbConf {
-	envPath, err := filepath.Abs(".env")
-	if err != nil {
-		panic(err)
+func NewDbConf(files ...string) DbConf {
+	var err error
+
+	absPaths := make([]string, 0, cap(files))
+	for _, f := range files {
+		envPath, err := filepath.Abs(f)
+		if err != nil {
+			panic(err)
+		}
+		absPaths = append(absPaths, envPath)
 	}
 
-	err = godotenv.Load(envPath)
+	err = godotenv.Load(absPaths...)
 	if err != nil {
 		panic(err)
 	}

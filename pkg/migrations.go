@@ -23,7 +23,7 @@ func (ms Migrations) Swap(i, j int) {
 
 func (ms Migrations) Less(i, j int) bool {
 	if ms[i].Version == ms[j].Version {
-		panic(internal.ErrDuplicateVersion(ms[i].Version, ms[i].Source, ms[j].Source))
+		logger.Fatal(internal.ErrDuplicateVersion(ms[i].Version, ms[i].Source, ms[j].Source))
 	}
 	return ms[i].Version < ms[j].Version
 }
@@ -107,7 +107,6 @@ func lookupMigrations(directory string, targetVersion int64) (Migrations, error)
 		}
 	}
 
-	// TODO: check sort stability
 	sort.Sort(migrations)
 
 	return migrations, nil
@@ -126,7 +125,6 @@ func lookupNotAppliedMigrations(known, found Migrations) Migrations {
 		}
 	}
 
-	// TODO: check sort stability
 	sort.Sort(migrations)
 	return migrations
 }

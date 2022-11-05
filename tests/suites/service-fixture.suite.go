@@ -25,7 +25,7 @@ type ServiceFixtureSuite struct {
 func (sf *ServiceFixtureSuite) Init(dialect, connectionString string) {
 	db, err := dbshaker.OpenDbWithDriver(dialect, connectionString)
 	if err != nil {
-		panic(err)
+		//panic(err)
 	}
 
 	sf.Db = db

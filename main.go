@@ -1,10 +1,9 @@
 package main
 
 import (
+	"github.com/ToggyO/dbshaker/internal"
 	"log"
 	"path/filepath"
-
-	_ "github.com/lib/pq"
 
 	"github.com/ToggyO/dbshaker/pkg"
 	_ "github.com/ToggyO/dbshaker/tests/migrations"
@@ -12,10 +11,9 @@ import (
 
 const connectionString = "host=localhost port=15436 user=dbshaker_root password=p@ssw0rd dbname=dbshaker sslmode=disable"
 
-// TODO: обдумать патч версии. Возмонжно, последней версией БД стоит считать последнюю примененную миграцию
-
-// TODO: remove package `github.com/lib/pq`
 func main() {
+	internal.Logger.Println("AHAH")
+
 	db, err := dbshaker.OpenDbWithDriver("postgres", connectionString)
 	if err != nil {
 		log.Fatalln(err)
@@ -26,7 +24,7 @@ func main() {
 		log.Fatalln(err)
 	}
 
-	err = dbshaker.Up(db, dir)
+	err = dbshaker.Down(db, dir)
 	if err != nil {
 		log.Fatalln(err)
 	}
