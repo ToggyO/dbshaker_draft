@@ -8,8 +8,6 @@ import (
 	_ "github.com/lib/pq"
 )
 
-// TODO: добавить тест на UpTo (создание миграции находу с помощью create)
-
 type PgTestSuite struct {
 	suites.ServiceFixtureSuite
 }

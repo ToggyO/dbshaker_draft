@@ -74,7 +74,7 @@ func (p *postgresDialect) GetMigrationsList(ctx context.Context, filter *Migrati
 	}
 
 	defer rows.Close()
-	migrations := make(MigrationRecords, 0, 0)
+	migrations := make(MigrationRecords, 0)
 
 	for rows.Next() {
 		var model MigrationRecord

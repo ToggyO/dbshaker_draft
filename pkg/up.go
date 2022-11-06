@@ -55,6 +55,9 @@ func UpToContext(ctx context.Context, db *DB, directory string, targetVersion in
 		if notAppliedMigrationsLen > 0 {
 			if notAppliedMigrations[notAppliedMigrationsLen-1].Version < currentDbVersion {
 				err = db.dialect.IncrementVersionPatch(ctx, currentDbVersion)
+				if err != nil {
+					return err
+				}
 			}
 		}
 

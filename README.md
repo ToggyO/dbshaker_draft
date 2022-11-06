@@ -1,7 +1,7 @@
 github.com/ToggyO/dbshaker
 ======
 
-Golang migration tool supports `*.go`, `*.sql` migration types
+Migration tool for Golang, supports `*.go`, `*.sql` migration types.
 
 Version: 0.0.1
 ____
@@ -22,4 +22,4 @@ Changelog:
 - Блокировка транзакций на уровне БД;
 - Генерация шаблонов `.go` миграций;
 - Выполнение команд с помощью CLI;
-- Поддержкарегистрации и выполнения `.sql` миграций.
+- Поддержка регистрации и выполнения `.sql` миграций;

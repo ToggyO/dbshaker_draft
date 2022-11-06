@@ -2,6 +2,8 @@ package internal
 
 import "time"
 
+type TransactionKey string
+
 type Dialect string
 
 type MigrationListFilter struct {

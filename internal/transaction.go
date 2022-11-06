@@ -5,7 +5,7 @@ import (
 	"database/sql"
 )
 
-const transactionKey = "t_x_transaction"
+const transactionKey TransactionKey = "t_x_transaction"
 
 type TransactionManager struct {
 	db *sql.DB

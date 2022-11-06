@@ -11,7 +11,6 @@ import (
 type MigrationFunc func(tx *sql.Tx) error
 
 // Migration represents a database migration, manages by go runtime.
-// TODO: check on field privacy
 type Migration struct {
 	Name    string // migration file name.
 	Version int64  // version of migration.
