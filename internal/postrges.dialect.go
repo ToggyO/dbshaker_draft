@@ -97,7 +97,6 @@ func (p *postgresDialect) GetDbVersion(ctx context.Context) (DbVersion, error) {
 	query := fmt.Sprintf(`SELECT version, patch FROM %s ORDER BY version DESC;`, p.tableName)
 	queryRunner := p.GetQueryRunner(ctx)
 
-	// TODO: обдумать получение патча
 	var version DbVersion
 	err := queryRunner.QueryRowContext(ctx, query).Scan(&version.Version, &version.Patch)
 
