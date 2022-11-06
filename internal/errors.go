@@ -22,4 +22,8 @@ var (
 	ErrDbAlreadyIsUpToDate = func(version int64) error {
 		return fmt.Errorf("[dbshaker]: database is already up to date. current version: %d", version)
 	}
+
+	ErrFailedToRunMigration = func(source string, migrationFunc MigrationFunc, err error) error {
+		return fmt.Errorf("ERROR %v: failed to run Go migration function %T: %w", source, migrationFunc, err)
+	}
 )

@@ -7,8 +7,11 @@ import (
 	"sort"
 )
 
-const MaxUint = ^uint64(0)
-const maxVersion = int64(MaxUint >> 1) // max(int64)
+const (
+	maxUint    = ^uint64(0)
+	maxVersion = int64(maxUint >> 1) // max(int64)
+
+)
 
 // Migrations runtime slice of Migration struct pointers.
 type Migrations []*internal.Migration
@@ -29,13 +32,13 @@ func (ms Migrations) Less(i, j int) bool {
 }
 
 // ListMigrations lists all applied migrations in database.
-func ListMigrations() (Migrations, error) {
-	return ListMigrationsContext(context.Background())
+func ListMigrations(db *DB) (Migrations, error) {
+	return ListMigrationsContext(context.Background(), db)
 }
 
 // ListMigrationsContext lists all applied migrations in database with context.
-func ListMigrationsContext(ctx context.Context) (Migrations, error) {
-	records, err := migrator.getDialect().GetMigrationsList(ctx, nil)
+func ListMigrationsContext(ctx context.Context, db *DB) (Migrations, error) {
+	records, err := db.dialect.GetMigrationsList(ctx, nil)
 	if err != nil {
 		return nil, err
 	}
@@ -46,6 +49,16 @@ func ListMigrationsContext(ctx context.Context) (Migrations, error) {
 // sorted by version in ascending direction.
 // TODO: `embed` support in future by embed.FS
 func lookupMigrations(directory string, targetVersion int64) (Migrations, error) {
+	key, err := filepath.Abs(directory)
+	if err != nil {
+		return nil, err
+	}
+
+	folderRegistry, ok := registry[key]
+	if !ok {
+		folderRegistry = make(folderGoMigrationRegistry)
+	}
+
 	var migrations Migrations
 
 	// SQL migrations
@@ -57,7 +70,7 @@ func lookupMigrations(directory string, targetVersion int64) (Migrations, error)
 
 	// micro optimization of migrations slice allocation size
 	if len(sqlMigrationFiles) > 0 {
-		migrations = make(Migrations, 0, len(sqlMigrationFiles)+len(migrator.registeredGoMigrations))
+		migrations = make(Migrations, 0, len(sqlMigrationFiles)+len(folderRegistry))
 	}
 
 	for _, file := range sqlMigrationFiles {
@@ -79,11 +92,11 @@ func lookupMigrations(directory string, targetVersion int64) (Migrations, error)
 
 	// micro optimization of migrations slice allocation size
 	if cap(migrations) <= 0 {
-		migrations = make(Migrations, 0, len(migrator.registeredGoMigrations))
+		migrations = make(Migrations, 0, len(folderRegistry))
 	}
 
 	// Migrations in `.go` files, registered via AddMigration
-	for _, migration := range migrator.registeredGoMigrations {
+	for _, migration := range folderRegistry {
 		if migration.Version > targetVersion {
 			continue
 		}
@@ -102,7 +115,7 @@ func lookupMigrations(directory string, targetVersion int64) (Migrations, error)
 			continue // Пропускаем файлы, которые не имею версионного префикса
 		}
 
-		if _, ok := migrator.registeredGoMigrations[v]; !ok {
+		if _, ok := folderRegistry[v]; !ok {
 			return nil, internal.ErrUnregisteredGoMigration
 		}
 	}

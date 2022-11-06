@@ -22,7 +22,7 @@ func (s *PgTestSuite) TestMigrationDownTo() {
 	err := dbshaker.DownTo(s.Db, s.MigrationRoot, 15102022005)
 	require.NoError(s.Suite.T(), err)
 
-	migrations, err := dbshaker.ListMigrations()
+	migrations, err := dbshaker.ListMigrations(s.Db)
 	require.NoError(s.Suite.T(), err)
 	require.Len(s.T(), migrations, 2)
 }

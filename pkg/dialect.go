@@ -6,14 +6,12 @@ import (
 	"github.com/ToggyO/dbshaker/internal"
 )
 
-func SetDialect(db *sql.DB, d string) error {
+func getDialect(connection *sql.DB, d string) (internal.ISqlDialect, error) {
 	// TODO: добавить поддержку диалектов других СУБД
 	switch d {
 	case internal.PostgresDialect, internal.PgxDialect:
-		migrator.setDialect(internal.NewPostgresDialect(db, internal.ServiceTableName))
+		return internal.NewPostgresDialect(connection, internal.ServiceTableName), nil
 	default:
-		return fmt.Errorf("%q: unknown dialect", d)
+		return nil, fmt.Errorf("%q: unknown dialect", d)
 	}
-
-	return nil
 }

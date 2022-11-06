@@ -6,9 +6,9 @@ import (
 	"github.com/ToggyO/dbshaker/internal"
 )
 
-var migrator = &migrationRunner{
-	registeredGoMigrations: make(map[int64]*internal.Migration),
-}
+//var migrator = &migrationRunner{
+//	registeredGoMigrations: make(map[int64]*internal.Migration),
+//}
 
 type migrationRunner struct {
 	db                     *sql.DB

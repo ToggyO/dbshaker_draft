@@ -3,7 +3,6 @@ package internal
 import (
 	"context"
 	"database/sql"
-	"fmt"
 	"log"
 	"path/filepath"
 )
@@ -59,23 +58,21 @@ func (m *Migration) run(ctx context.Context, tx *sql.Tx, dialect ISqlDialect, di
 		if fn != nil {
 			if err = fn(tx); err != nil {
 				_ = tx.Rollback()
-				// TODO: duplicate
-				return fmt.Errorf("ERROR %v: failed to run Go migration function %T: %w", filepath.Base(m.Name), fn, err)
+				return ErrFailedToRunMigration(filepath.Base(m.Name), fn, err)
 			}
 
 		}
 
 		if direction {
 			if err = dialect.InsertVersion(ctx, m.Version); err != nil {
-				//_ = tx.Rollback()
-				// TODO: duplicate
-				return fmt.Errorf("ERROR %v: failed to run Go migration function %T: %w", filepath.Base(m.Name), fn, err)
+				// TODO: check multiple rollback
+				_ = tx.Rollback()
+				return ErrFailedToRunMigration(filepath.Base(m.Name), fn, err)
 			}
 		} else {
 			if err = dialect.RemoveVersion(ctx, m.Version); err != nil {
-				//_ = tx.Rollback()
-				// TODO: duplicate
-				return fmt.Errorf("ERROR %v: failed to run Go migration function %T: %w", filepath.Base(m.Name), fn, err)
+				_ = tx.Rollback()
+				return ErrFailedToRunMigration(filepath.Base(m.Name), fn, err)
 			}
 		}
 
