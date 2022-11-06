@@ -8,11 +8,14 @@ import (
 	"github.com/ToggyO/dbshaker/internal"
 )
 
+// DB represent a database connection driver.
 type DB struct {
 	db      *sql.DB
 	dialect internal.ISqlDialect
 }
 
+// OpenDbWithDriver creates a connection to a database, and creates
+// compatible with the supplied driver by calling SQL dialect.
 func OpenDbWithDriver(dialect, connectionString string) (*DB, error) {
 	fmt.Printf("Connecting to `%s` database...", dialect)
 
@@ -36,7 +39,7 @@ func OpenDbWithDriver(dialect, connectionString string) (*DB, error) {
 		return nil, fmt.Errorf("ERROR: failed connect to database: %v", err)
 	}
 
-	sqlDialect, err := getDialect(connection, dialect)
+	sqlDialect, err := createDialect(connection, dialect)
 	if err != nil {
 		return nil, err
 	}

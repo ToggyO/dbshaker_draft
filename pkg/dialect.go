@@ -6,7 +6,7 @@ import (
 	"github.com/ToggyO/dbshaker/internal"
 )
 
-func getDialect(connection *sql.DB, d string) (internal.ISqlDialect, error) {
+func createDialect(connection *sql.DB, d string) (internal.ISqlDialect, error) {
 	// TODO: добавить поддержку диалектов других СУБД
 	switch d {
 	case internal.PostgresDialect, internal.PgxDialect:
